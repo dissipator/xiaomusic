@@ -274,6 +274,9 @@ async def musicinfo(
     name: str, musictag: bool = False, Verifcation=Depends(verification)
 ):
     url = xiaomusic.get_music_url(name)
+    if("song/url" in url):
+        jsons = await downloadfile(url,"json")
+        url = jsons['data'][0]['url']
     info = {
         "ret": "OK",
         "name": name,
@@ -329,13 +332,23 @@ class UrlInfo(BaseModel):
 async def downloadjson(data: UrlInfo, Verifcation=Depends(verification)):
     log.info(data)
     url = data.url
-    content = ""
+    content = "[{"
+    host = f"{url.split('/')[0]}//{url.split('/')[2]}"
     try:
         ret = "OK"
-        content = await downloadfile(url)
+        jsons = await downloadfile(url,"json")
+        # print(jsons)
+        list_name = jsons['playlist']['name']
+        content += '"name":"'+list_name+'","musics":['
+        for song in jsons['playlist']['tracks']:
+            # print(song)
+            content += "{"
+            content += f"\"name\":\"{song['name']}\",\"url\": \"{host}/song/url?br=999000&proxy=http:%2F%2F127.0.0.1:8080&realIP=211.161.244.70&id={song['id']}\""
+            content += "},"
     except Exception as e:
         log.exception(f"Execption {e}")
         ret = "Download JSON file failed."
+    content = content[:-1] + "]}]"
     return {
         "ret": ret,
         "content": content,
