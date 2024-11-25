@@ -15,7 +15,7 @@
   "proxy": null,
   "search_prefix": "bilisearch:",
   "ffmpeg_location": "./ffmpeg/bin",
-  "active_cmd": "play,set_random_play,playlocal,play_music_list,stop",
+  "active_cmd": "play,set_random_play,playlocal,play_music_list,stop,获取歌单",
   "exclude_dirs": "@eaDir",
   "music_path_depth": 10,
   "disable_httpauth": true,
@@ -60,7 +60,8 @@
     "停止",
     "停止播放",
     "测试自定义口令",
-    "测试链接"
+    "测试链接",
+    "获取歌单"
   ],
   "use_music_api": false,
   "use_music_audio_id": "1582971365183456177",
@@ -75,7 +76,8 @@
   "keywords_stop": "关机,暂停,停止,停止播放",
   "user_key_word_dict": {
     "测试自定义口令": "exec#code1(\"hello\")",
-    "测试链接": "exec#httpget(\"https://github.com/hanxi/xiaomusic\")"
+    "测试链接": "exec#httpget(\"https://github.com/hanxi/xiaomusic\")",
+    "获取歌单": "exec#getmy_playlist(playlist_id=12758992225)"
   },
   "enable_force_stop": false,
   "devices": {},
