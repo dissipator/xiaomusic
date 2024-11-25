@@ -1,4 +1,4 @@
-# 【直接播放 NeteaseMusicApi】 歌单和音乐、以及灰色音乐
+# 新增功能：【直接播放 NeteaseMusicApi】 歌单和音乐、以及灰色音乐
 
 1. 在原有功能基础上，通过插件实现 网易歌单读取。
 2. 通过部分修改直接播放NeteaseMusicApi的歌曲
