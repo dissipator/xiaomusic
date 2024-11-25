@@ -1,3 +1,9 @@
+# 【直接播放 NeteaseMusicApi】 歌单和音乐、以及灰色音乐
+
+1. 在原有功能基础上，通过插件实现 网易歌单读取。
+2. 通过部分修改直接播放NeteaseMusicApi的歌曲
+3. 通过 UnblockNeteaseMusic proxy unlock 灰色歌曲。
+    
 # XiaoMusic: 无限听歌，解放小爱音箱
 [![GitHub License](https://img.shields.io/github/license/hanxi/xiaomusic)](https://github.com/hanxi/xiaomusic)
 [![Docker Image Version](https://img.shields.io/docker/v/hanxi/xiaomusic?sort=semver&label=docker%20image)](https://hub.docker.com/r/hanxi/xiaomusic)
@@ -99,7 +105,6 @@ services:
 
 ### 🤐 支持语音口令
 
-- 【直接播放 NeteaseMusicApi】 歌单和音乐、以及灰色音乐
 - 【播放歌曲】，播放本地的歌曲
 - 【播放歌曲+歌名】，比如：播放歌曲周杰伦晴天
 - 【上一首】
