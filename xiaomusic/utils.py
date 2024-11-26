@@ -245,6 +245,7 @@ async def downloadfile(url,type="text"):
             if type == "json":
                 json_data = await response.json()
                 return json_data
+            text = await response.text()
             return text
 
 
