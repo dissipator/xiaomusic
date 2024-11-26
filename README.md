@@ -3,7 +3,150 @@
 1. 在原有功能基础上，通过插件实现 网易歌单读取。
 2. 通过部分修改直接播放NeteaseMusicApi的歌曲
 3. 通过 UnblockNeteaseMusic proxy unlock 灰色歌曲。
-    
+4. 使用方式
+    a. 使用docker-compose,  参数等自行配置
+   ```
+   services:
+      xiaomusic:
+        image: dissipator/xiaomusic:main
+        container_name: xiaomusic
+        restart: unless-stopped
+        ports:
+          - 8090:8090
+        volumes:
+          - ./music:/app/music
+          - ./conf:/app/conf
+      api:
+        image: registry.cn-chengdu.aliyuncs.com/dissipator/music
+        container_name: api
+        restart: unless-stopped
+        ports:
+          - 80:80
+          - 3000:3000
+        environment:
+          - SOURCE=pyncmd qq kuwo kugou
+   ```
+   b. 配置语音口令
+   ```
+   {
+  "account": "",
+  "password": "",
+  "mi_did": "",
+  "miio_tts_command": "",
+  "cookie": "",
+  "verbose": false,
+  "music_path": "music",
+  "download_path": "music/download",
+  "conf_path": "conf",
+  "cache_dir": "cache",
+  "hostname": "192.168.2.5",
+  "port": 8090,
+  "public_port": 0,
+  "proxy": "",
+  "search_prefix": "bilisearch:",
+  "ffmpeg_location": "./ffmpeg/bin",
+  "active_cmd": "play,set_random_play,playlocal,play_music_list,play_music_list_index,stop_after_minute,stop,获取歌单",
+  "exclude_dirs": "@eaDir,tmp",
+  "music_path_depth": 10,
+  "disable_httpauth": true,
+  "httpauth_username": "",
+  "httpauth_password": "",
+  "music_list_url": "",
+  "music_list_json": "",
+  "custom_play_list_json": "",
+  "disable_download": false,
+  "key_word_dict": {
+    "播放歌曲": "play",
+    "播放本地歌曲": "playlocal",
+    "关机": "stop",
+    "下一首": "play_next",
+    "上一首": "play_prev",
+    "单曲循环": "set_play_type_one",
+    "全部循环": "set_play_type_all",
+    "随机播放": "set_random_play",
+    "分钟后关机": "stop_after_minute",
+    "播放列表": "play_music_list",
+    "刷新列表": "gen_music_list",
+    "加入收藏": "add_to_favorites",
+    "收藏歌曲": "add_to_favorites",
+    "取消收藏": "del_from_favorites",
+    "播放列表第": "play_music_list_index",
+    "本地播放歌曲": "playlocal",
+    "放歌曲": "play",
+    "暂停": "stop",
+    "停止": "stop",
+    "停止播放": "stop",
+    "播放歌单": "play_music_list",
+    "测试自定义口令": "exec#code1(\"hello\")",
+    "测试链接": "exec#httpget(\"https://github.com/hanxi/xiaomusic\")",
+    "获取歌单": "exec#getmy_playlist(playlist_id=12758992225)"
+  },
+  "key_match_order": [
+    "分钟后关机",
+    "播放歌曲",
+    "下一首",
+    "上一首",
+    "单曲循环",
+    "全部循环",
+    "随机播放",
+    "关机",
+    "刷新列表",
+    "播放列表第",
+    "播放列表",
+    "加入收藏",
+    "收藏歌曲",
+    "取消收藏",
+    "播放本地歌曲",
+    "本地播放歌曲",
+    "放歌曲",
+    "暂停",
+    "停止",
+    "停止播放",
+    "播放歌单",
+    "测试自定义口令",
+    "测试链接",
+    "获取歌单"
+  ],
+  "use_music_api": false,
+  "use_music_audio_id": "1582971365183456177",
+  "use_music_id": "355454500",
+  "log_file": "/tmp/xiaomusic.txt",
+  "fuzzy_match_cutoff": 0.6,
+  "enable_fuzzy_match": true,
+  "stop_tts_msg": "收到,再见",
+  "enable_config_example": false,
+  "keywords_playlocal": "播放本地歌曲,本地播放歌曲",
+  "keywords_play": "播放歌曲,放歌曲",
+  "keywords_stop": "关机,暂停,停止,停止播放",
+  "keywords_playlist": "播放列表,播放歌单",
+  "user_key_word_dict": {
+    "测试自定义口令": "exec#code1(\"hello\")",
+    "测试链接": "exec#httpget(\"https://github.com/hanxi/xiaomusic\")",
+    "获取歌单": "exec#getmy_playlist(playlist_id=12758992225)"
+  },
+  "enable_force_stop": false,
+  "devices": {
+    " ": {
+      "did": " ",
+      "device_id": " -17c6-4204- - ",
+      "hardware": "L05C",
+      "name": "小黑你好",
+      "play_type": "",
+      "cur_music": "",
+      "cur_playlist": ""
+    }
+  },
+  "group_list": "",
+  "remove_id3tag": false,
+  "convert_to_mp3": false,
+  "delay_sec": 3,
+  "continue_play": false,
+  "pull_ask_sec": 1,
+  "crontab_json": "",
+  "enable_yt_dlp_cookies": false,
+  "get_ask_by_mina": false
+}
+   ```     
 # XiaoMusic: 无限听歌，解放小爱音箱
 [![GitHub License](https://img.shields.io/github/license/hanxi/xiaomusic)](https://github.com/hanxi/xiaomusic)
 [![Docker Image Version](https://img.shields.io/docker/v/hanxi/xiaomusic?sort=semver&label=docker%20image)](https://hub.docker.com/r/hanxi/xiaomusic)
