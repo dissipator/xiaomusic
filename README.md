@@ -30,7 +30,7 @@
    "获取歌单": "exec#getmy_playlist(api_host=\"http://api/api\",playlist_id=12758992225)"  其中playlist_id为歌单id，或只使用uid（用户id）
         来拉取所有歌单
    ```
-       {
+     {
       "account": "",
       "password": "",
       "mi_did": "",
@@ -48,41 +48,6 @@
       "search_prefix": "bilisearch:",
       "ffmpeg_location": "./ffmpeg/bin",
       "active_cmd": "play,set_random_play,playlocal,play_music_list,play_music_list_index,stop_after_minute,stop,获取歌单",
-      "exclude_dirs": "@eaDir,tmp",
-      "music_path_depth": 10,
-      "disable_httpauth": true,
-      "httpauth_username": "",
-      "httpauth_password": "",
-      "music_list_url": "",
-      "music_list_json": "",
-      "custom_play_list_json": "",
-      "disable_download": false,
-      "key_word_dict": {
-        "播放歌曲": "play",
-        "播放本地歌曲": "playlocal",
-        "关机": "stop",
-        "下一首": "play_next",
-        "上一首": "play_prev",
-        "单曲循环": "set_play_type_one",
-        "全部循环": "set_play_type_all",
-        "随机播放": "set_random_play",
-        "分钟后关机": "stop_after_minute",
-        "播放列表": "play_music_list",
-        "刷新列表": "gen_music_list",
-        "加入收藏": "add_to_favorites",
-        "收藏歌曲": "add_to_favorites",
-        "取消收藏": "del_from_favorites",
-        "播放列表第": "play_music_list_index",
-        "本地播放歌曲": "playlocal",
-        "放歌曲": "play",
-        "暂停": "stop",
-        "停止": "stop",
-        "停止播放": "stop",
-        "播放歌单": "play_music_list",
-        "测试自定义口令": "exec#code1(\"hello\")",
-        "测试链接": "exec#httpget(\"https://github.com/hanxi/xiaomusic\")",
-        "获取歌单": "exec#getmy_playlist(playlist_id=12758992225)"
-      },
       "key_match_order": [
         "分钟后关机",
         "播放歌曲",
@@ -109,44 +74,11 @@
         "测试链接",
         "获取歌单"
       ],
-      "use_music_api": false,
-      "use_music_audio_id": "1582971365183456177",
-      "use_music_id": "355454500",
-      "log_file": "/tmp/xiaomusic.txt",
-      "fuzzy_match_cutoff": 0.6,
-      "enable_fuzzy_match": true,
-      "stop_tts_msg": "收到,再见",
-      "enable_config_example": false,
-      "keywords_playlocal": "播放本地歌曲,本地播放歌曲",
-      "keywords_play": "播放歌曲,放歌曲",
-      "keywords_stop": "关机,暂停,停止,停止播放",
-      "keywords_playlist": "播放列表,播放歌单",
       "user_key_word_dict": {
         "测试自定义口令": "exec#code1(\"hello\")",
         "测试链接": "exec#httpget(\"https://github.com/hanxi/xiaomusic\")",
         "获取歌单": "exec#getmy_playlist(playlist_id=12758992225)"
-      },
-      "enable_force_stop": false,
-      "devices": {
-        " ": {
-          "did": " ",
-          "device_id": " -17c6-4204- - ",
-          "hardware": "L05C",
-          "name": "小黑你好",
-          "play_type": "",
-          "cur_music": "",
-          "cur_playlist": ""
-        }
-      },
-      "group_list": "",
-      "remove_id3tag": false,
-      "convert_to_mp3": false,
-      "delay_sec": 3,
-      "continue_play": false,
-      "pull_ask_sec": 1,
-      "crontab_json": "",
-      "enable_yt_dlp_cookies": false,
-      "get_ask_by_mina": false
+      }
     }
    ```     
 # XiaoMusic: 无限听歌，解放小爱音箱
