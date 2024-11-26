@@ -276,9 +276,9 @@ async def musicinfo(
     url = xiaomusic.get_music_url(name)
     try:
         if "song/url" in url:
-            songs = await downloadfile(url,"json")
-            url = songs['data'][0]['url']
-    except Exception as e:
+            songs = await downloadfile(url, "json")
+            url = songs["data"][0]["url"]
+    except Exception:
         pass
     info = {
         "ret": "OK",
@@ -301,9 +301,9 @@ async def musicinfos(
         url = xiaomusic.get_music_url(music_name)
         try:
             if "song/url" in url:
-                songs = await downloadfile(url,"json")
-                url = songs['data'][0]['url']
-        except Exception as e:
+                songs = await downloadfile(url, "json")
+                url = songs["data"][0]["url"]
+        except Exception:
             pass
         info = {
             "name": music_name,
