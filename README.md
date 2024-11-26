@@ -8,7 +8,7 @@
    ```
    services:
       xiaomusic:
-        image: dissipator/xiaomusic:main
+        image: dissipator/xiaomusic:dev
         container_name: xiaomusic
         restart: unless-stopped
         ports:
