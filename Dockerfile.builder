@@ -7,6 +7,7 @@ WORKDIR /app
 #COPY xiaomusic/ ./xiaomusic/
 #COPY plugins/ ./plugins/
 #COPY xiaomusic.py .
-RUN git clone https://github.com/dissipator/xiaomusic.git . && cd . && git checkout dev
+RUN git clone https://github.com/dissipator/xiaomusic.git .  && git checkout dev
+COPY pyproject.toml .
 RUN pdm install --prod --no-editable
 
