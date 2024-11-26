@@ -2,8 +2,9 @@ FROM hanxi/xiaomusic:builder AS builder
 ENV DEBIAN_FRONTEND=noninteractive
 RUN pip install -U pdm
 ENV PDM_CHECK_UPDATE=false
-RUN rm -rf /app && mkdr -p /app
 WORKDIR /app
+RUN cd / && rm -rf /app && mkdr -p /app 
+RUN cd /app 
 RUN git clone https://github.com/dissipator/xiaomusic.git .  && git checkout dev
 COPY pyproject.toml README.md .
 #COPY xiaomusic/ ./xiaomusic/
