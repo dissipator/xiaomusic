@@ -1,4 +1,4 @@
-import requests
+import requests,re,json
 
 # 功能： 从网易云账号读取歌单，并生成播放url
 # type: 歌单来源类型
@@ -146,23 +146,29 @@ async def getmy_playlist(type="netease",api_host="http://127.0.0.1:3000", playli
                     picUrl = ""
                     artist = music["singer"][0]["name"]
                     album = music["albumname"]
-                    search_url = f"{api_host}/cloudsearch?keywords={name}({artist})&limit=5&type=1"
-                    # songmid = music["songmid"]
-                    # url = f"https://lxmusicapi.onrender.com/url/tx/{songmid}/{qualityLevels['low']}"
-                    # headers = {"X-Request-Key": "share-v2"}
+                    songmid = music["songmid"]
+                    print(name,artist,songmid)
                     try:
-                        response = requests.get(search_url, headers=headers)
+                        search_url = f"{api_host}/cloudsearch?keywords={name}({artist})&limit=3&type=1"
+                        response = requests.get(search_url,timeout=2)
                         response.raise_for_status()  # 如果请求出现4xx、5xx等错误状态码则抛出异常
-                        print(name,artist)
-
                         for song in response.json()['result']['songs']:
                             if song['name'] == name and song['ar'][0]['name'] == artist:
-                                # print(song)
+
                                 url = f"{api_host}/song/url?id={song['id']}&br={br}&proxy=HTTP:%2F%2F127.0.0.1:8080"
                                 picUrl = song["al"]["picUrl"]
                                 break
-                    except requests.RequestException as e:
-                        log.info(f"getmy_playlist Error: Error fetching data for {name}: {e}")
+                        # response = requests.get(url,timeout=5)
+                        # response.raise_for_status()  # 如果请求出现4xx、5xx等错误状态码则抛出异常
+                        # url = response.json()['data'][0]['url']
+                    except:
+                        url = f"https://lxmusicapi.onrender.com/url/tx/{songmid}/128k"
+                        headers = {"X-Request-Key": "share-v2"}
+                        response = requests.get(url, headers=headers,timeout=30)
+                        response.raise_for_status()  # 如果请求出现4xx、5xx等错误状态码则抛出异常
+                        url = response.json()['url']
+                    else:
+                        pass
                         continue
                     if (not name) or (not url):
                         continue
@@ -175,6 +181,7 @@ async def getmy_playlist(type="netease",api_host="http://127.0.0.1:3000", playli
                         "genre": "",
                         "picture": picUrl,
                         "lyrics": "",
+                        "url": url,
                     }
                     one_music_list.append(name)
                     if index > 100:
