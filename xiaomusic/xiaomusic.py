@@ -28,10 +28,12 @@ from xiaomusic.const import (
     COOKIE_TEMPLATE,
     GET_ASK_BY_MINA,
     LATEST_ASK_API,
+    NEED_USE_PLAY_MUSIC_API,
     PLAY_TYPE_ALL,
     PLAY_TYPE_ONE,
     PLAY_TYPE_RND,
-    PLAY_TYPE_TTS,
+    PLAY_TYPE_SEQ,
+    PLAY_TYPE_SIN,
     SUPPORT_MUSIC_TYPE,
 )
 from xiaomusic.crontab import Crontab
@@ -49,6 +51,7 @@ from xiaomusic.utils import (
     list2str,
     parse_cookie_string,
     parse_str_to_dict,
+    save_picture_by_base64,
     traverse_music_directory,
     try_add_access_control_param,
 )
@@ -155,7 +158,7 @@ class XiaoMusic:
 
         log_file = self.config.log_file
         log_path = os.path.dirname(log_file)
-        if not os.path.exists(log_path):
+        if log_path and not os.path.exists(log_path):
             os.makedirs(log_path)
         if os.path.exists(log_file):
             os.remove(log_file)
@@ -185,7 +188,7 @@ class XiaoMusic:
                         self.last_timestamp[did] = int(time.time() * 1000)
 
                     hardware = self.get_hardward(device_id)
-                    if hardware in GET_ASK_BY_MINA or self.config.get_ask_by_mina:
+                    if (hardware in GET_ASK_BY_MINA) or self.config.get_ask_by_mina:
                         tasks.append(self.get_latest_ask_by_mina(device_id))
                     else:
                         tasks.append(
@@ -462,6 +465,27 @@ class XiaoMusic:
             )
         return tags
 
+    # 修改标签信息
+    def set_music_tag(self, name, info):
+        if self._tag_generation_task:
+            self.log.info("tag 更新中，请等待")
+            return "Tag generation task running"
+        tags = copy.copy(self.all_music_tags.get(name, asdict(Metadata())))
+        tags["title"] = info.title
+        tags["artist"] = info.artist
+        tags["album"] = info.album
+        tags["year"] = info.year
+        tags["genre"] = info.genre
+        tags["lyrics"] = info.lyrics
+        if info.picture:
+            file_path = self.all_music[name]
+            tags["picture"] = save_picture_by_base64(
+                info.picture, self.config.picture_cache_path, file_path
+            )
+        self.all_music_tags[name] = tags
+        self.try_save_tag_cache()
+        return "OK"
+
     def get_music_url(self, name):
         if self.is_web_music(name):
             url = self.all_music[name]
@@ -617,13 +641,15 @@ class XiaoMusic:
                 "全部": [],  # 包含所有歌曲和所有电台
                 "下载": [],  # 下载目录下的
                 "其他": [],  # 主目录下的
+                "最近新增": [],  # 按文件时间排序
             }
         )
-        # 全部，所有，自定义歌单（收藏）
-        self.music_list["全部"] = list(self.all_music.keys())
-        self.music_list["所有歌曲"] = [
-            name for name in self.all_music.keys() if name not in self._all_radio
-        ]
+        # 最近新增(不包含网络歌单)
+        self.music_list["最近新增"] = sorted(
+            self.all_music.keys(),
+            key=lambda x: os.path.getctime(self.all_music[x]),
+            reverse=True,
+        )[: self.config.recently_added_playlist_len]
 
         # 网络歌单
         try:
@@ -631,6 +657,12 @@ class XiaoMusic:
             self._append_music_list()
         except Exception as e:
             self.log.exception(f"Execption {e}")
+
+        # 全部，所有，自定义歌单（收藏）
+        self.music_list["全部"] = list(self.all_music.keys())
+        self.music_list["所有歌曲"] = [
+            name for name in self.all_music.keys() if name not in self._all_radio
+        ]
 
         # 文件夹歌单
         for dir_name, musics in all_music_by_dir.items():
@@ -885,15 +917,26 @@ class XiaoMusic:
 
     # 设置为单曲循环
     async def set_play_type_one(self, did="", **kwargs):
-        await self.devices[did].set_play_type(PLAY_TYPE_ONE)
+        await self.set_play_type(did, PLAY_TYPE_ONE)
 
     # 设置为全部循环
     async def set_play_type_all(self, did="", **kwargs):
-        await self.devices[did].set_play_type(PLAY_TYPE_ALL)
+        await self.set_play_type(did, PLAY_TYPE_ALL)
 
     # 设置为随机播放
-    async def set_random_play(self, did="", **kwargs):
-        await self.devices[did].set_play_type(PLAY_TYPE_RND)
+    async def set_play_type_rnd(self, did="", **kwargs):
+        await self.set_play_type(did, PLAY_TYPE_RND)
+
+    # 设置为单曲播放
+    async def set_play_type_sin(self, did="", **kwargs):
+        await self.set_play_type(did, PLAY_TYPE_SIN)
+
+    # 设置为顺序播放
+    async def set_play_type_seq(self, did="", **kwargs):
+        await self.set_play_type(did, PLAY_TYPE_SEQ)
+
+    async def set_play_type(self, did="", play_type=PLAY_TYPE_RND, dotts=True):
+        await self.devices[did].set_play_type(play_type, dotts)
 
     # 设置为刷新列表
     async def gen_music_list(self, **kwargs):
@@ -938,14 +981,17 @@ class XiaoMusic:
         parts = arg1.split("|")
         list_name = parts[0]
 
+        music_name = ""
+        if len(parts) > 1:
+            music_name = parts[1]
+        return await self.do_play_music_list(did, list_name, music_name)
+
+    async def do_play_music_list(self, did, list_name, music_name=""):
         list_name = self._find_real_music_list_name(list_name)
         if list_name not in self.music_list:
             await self.do_tts(did, f"播放列表{list_name}不存在")
             return
 
-        music_name = ""
-        if len(parts) > 1:
-            music_name = parts[1]
         await self.devices[did].play_music_list(list_name, music_name)
 
     # 播放一个播放列表里第几个
@@ -977,9 +1023,12 @@ class XiaoMusic:
         parts = arg1.split("|")
         search_key = parts[0]
         name = parts[1] if len(parts) > 1 else search_key
-        if name == "":
+        if not name:
             name = search_key
 
+        return await self.do_play(did, name, search_key)
+
+    async def do_play(self, did, name, search_key=""):
         return await self.devices[did].play(name, search_key)
 
     # 本地播放
@@ -1248,7 +1297,11 @@ class XiaoMusicDevice:
 
     @property
     def did(self):
-        return self.xiaomusic.device_id_did[self.device_id]
+        return self.device.did
+
+    @property
+    def hardware(self):
+        return self.device.hardware
 
     def get_cur_music(self):
         return self.device.cur_music
@@ -1345,6 +1398,7 @@ class XiaoMusicDevice:
         if (
             self.device.play_type == PLAY_TYPE_ALL
             or self.device.play_type == PLAY_TYPE_RND
+            or self.device.play_type == PLAY_TYPE_SEQ
             or name == ""
             or (
                 (name not in self._play_list) and self.device.play_type != PLAY_TYPE_ONE
@@ -1429,7 +1483,11 @@ class XiaoMusicDevice:
             return
 
         self.log.info(f"【{name}】已经开始播放了")
-        await self.xiaomusic.analytics.send_play_event(name, sec)
+        await self.xiaomusic.analytics.send_play_event(name, sec, self.hardware)
+
+        if self.device.play_type == PLAY_TYPE_SIN:
+            self.log.info(f"【{name}】单曲播放时不会设置下一首歌的定时器")
+            return
 
         # 设置下一首歌曲的播放定时器
         if sec <= 1:
@@ -1583,6 +1641,12 @@ class XiaoMusicDevice:
         else:
             if direction == "next":
                 new_index = index + 1
+                if (
+                    self.device.play_type == PLAY_TYPE_SEQ
+                    and new_index >= play_list_len
+                ):
+                    self.log.info("顺序播放结束")
+                    return ""
                 if new_index >= play_list_len:
                     new_index = 0
             elif direction == "prev":
@@ -1663,7 +1727,9 @@ class XiaoMusicDevice:
                 self.log.info(
                     f"play_one_url continue_play device_id:{device_id} ret:{ret} url:{url} audio_id:{audio_id}"
                 )
-            elif self.config.use_music_api:
+            elif self.config.use_music_api or (
+                self.hardware in NEED_USE_PLAY_MUSIC_API
+            ):
                 ret = await self.xiaomusic.mina_service.play_by_music_url(
                     device_id, url, audio_id=audio_id
                 )
@@ -1758,11 +1824,12 @@ class XiaoMusicDevice:
         self.log.info("get_volume. volume:%d", volume)
         return volume
 
-    async def set_play_type(self, play_type):
+    async def set_play_type(self, play_type, dotts=True):
         self.device.play_type = play_type
         self.xiaomusic.save_cur_config()
-        tts = PLAY_TYPE_TTS[play_type]
-        await self.do_tts(tts)
+        if dotts:
+            tts = self.config.get_play_type_tts(play_type)
+            await self.do_tts(tts)
         self.update_playlist()
 
     async def play_music_list(self, list_name, music_name):

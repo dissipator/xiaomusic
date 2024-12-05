@@ -4,16 +4,20 @@ $(function(){
   append_op_button_name("加入收藏");
   append_op_button_name("取消收藏");
 
-  const PLAY_TYPE_ONE = 0; // 单曲循环
-  const PLAY_TYPE_ALL = 1; // 全部循环
-  const PLAY_TYPE_RND = 2; // 随机播放
-  append_op_button("play_type_all", "全部循环", "全部循环");
-  append_op_button("play_type_one", "单曲循环", "单曲循环");
-  append_op_button("play_type_rnd", "随机播放", "随机播放");
-
   append_op_button_name("上一首");
   append_op_button_name("关机");
   append_op_button_name("下一首");
+
+  const PLAY_TYPE_ONE = 0; // 单曲循环
+  const PLAY_TYPE_ALL = 1; // 全部循环
+  const PLAY_TYPE_RND = 2; // 随机播放
+  const PLAY_TYPE_SIN = 3; // 单曲播放
+  const PLAY_TYPE_SEQ = 4; // 顺序播放
+  append_op_button("play_type_all", "全部循环", "全部循环");
+  append_op_button("play_type_one", "单曲循环", "单曲循环");
+  append_op_button("play_type_rnd", "随机播放", "随机播放");
+  append_op_button("play_type_sin", "单曲播放", "单曲播放");
+  append_op_button("play_type_seq", "顺序播放", "顺序播放");
 
   append_op_button_name("刷新列表");
 
@@ -25,7 +29,7 @@ $(function(){
 
   var offset = 0;
   var duration = 0;
-
+  let no_warning = localStorage.getItem('no-warning');
   // 拉取现有配置
   $.get("/getsetting", function(data, status) {
     console.log(data, status);
@@ -71,6 +75,12 @@ $(function(){
           } else if (cur_device.play_type == PLAY_TYPE_RND) {
             $("#play_type_rnd").css('background-color', '#b1a8f3');
             $("#play_type_rnd").text('✔️ 随机播放');
+          } else if (cur_device.play_type == PLAY_TYPE_SIN) {
+            $("#play_type_sin").css('background-color', '#b1a8f3');
+            $("#play_type_sin").text('✔️ 单曲播放');
+          } else if (cur_device.play_type == PLAY_TYPE_SEQ) {
+            $("#play_type_seq").css('background-color', '#b1a8f3');
+            $("#play_type_seq").text('✔️ 顺序播放');
           }
         }
       }
@@ -182,11 +192,34 @@ $(function(){
     });
   }
 
+  function do_play_music_list(listname, musicname) {
+    $.ajax({
+      type: "POST",
+      url: "/playmusiclist",
+      contentType: "application/json; charset=utf-8",
+      data: JSON.stringify({did: did, listname: listname, musicname: musicname}),
+      success: () => {
+        console.log("do_play_music_list succ", listname, musicname);
+      },
+      error: () => {
+        console.log("do_play_music_list failed", listname, musicname);
+      }
+    });
+  }
+
   $("#play_music_list").on("click", () => {
     var music_list = $("#music_list").val();
     var music_name = $("#music_name").val();
-    let cmd = "播放列表" + music_list + "|" + music_name;
-    sendcmd(cmd);
+    if (no_warning) {
+      do_play_music_list(music_list, music_name);
+      return;
+    }
+    $.get(`/musicinfo?name=${music_name}`, function(data, status) {
+      console.log(data);
+      if (data.ret == "OK") {
+        validHost(data.url) && do_play_music_list(music_list, music_name);
+      }
+    });
   });
 
   $("#web_play").on("click", () => {
@@ -194,7 +227,7 @@ $(function(){
     $.get(`/musicinfo?name=${music_name}`, function(data, status) {
       console.log(data);
       if (data.ret == "OK") {
-        $('audio').attr('src',data.url);
+        validHost(data.url) && $('audio').attr('src',data.url);
       }
     });
   });
@@ -249,17 +282,32 @@ $(function(){
     $container.append($button);
   }
 
+  function do_play_music(musicname, searchkey) {
+    $.ajax({
+      type: "POST",
+      url: "/playmusic",
+      contentType: "application/json; charset=utf-8",
+      data: JSON.stringify({did: did, musicname: musicname, searchkey: searchkey}),
+      success: () => {
+        console.log("do_play_music succ", musicname, searchkey);
+      },
+      error: () => {
+        console.log("do_play_music failed", musicname, searchkey);
+      }
+    });
+  }
+
+
   $("#play").on("click", () => {
     var search_key = $("#music-name").val();
     if (search_key == null) {
       search_key = "";
     }
     var filename = $("#music-filename").val();
-    if (filename == null) {
-      filename = "";
+    if (filename == null || filename == "") {
+      filename = search_key;
     }
-    let cmd = "播放歌曲" + search_key + "|" + filename;
-    sendcmd(cmd);
+    do_play_music(filename, search_key);
   });
 
   $("#volume").on('change', function () {
@@ -298,7 +346,7 @@ $(function(){
         if (cmd == "刷新列表") {
           check_status_refresh_music_list(3); // 最多重试3次
         }
-        if (["全部循环", "单曲循环", "随机播放"].includes(cmd)) {
+        if (["全部循环", "单曲循环", "随机播放", "单曲播放", "顺序播放"].includes(cmd)) {
           location.reload();
         }
       },
@@ -365,7 +413,7 @@ $(function(){
       .catch(error => {
           console.error('Error fetching data:', error);
       });
-  }, 300));
+  }, 500));
 
   // 动态显示保存文件名输入框
   const musicNameSelect = document.getElementById('music-name');
@@ -425,5 +473,48 @@ $(function(){
     var minutes = Math.floor(seconds / 60);
     var remainingSeconds =Math.floor(seconds % 60);
     return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
-}
+  }
+  
+  $("audio").on("error", (e) => {
+    //如果audio标签的src为空，则不做任何操作，兼容安卓端的低版本webview
+    if ($("audio").attr("src") === "") {
+      return;
+    }
+    console.log('%c网页播放出现错误: ', 'color: #007acc;', e.currentTarget.error.code,e.currentTarget.error.message);
+    alert(e.currentTarget.error.code==4 ? "无法打开媒体文件，XIAOMUSIC_HOSTNAME或端口地址错误，请重新设置" : "在线播放失败，请截图反馈: "+e.currentTarget.error.message);
+  });
+  function validHost(url) {
+    //如果 localStorage 中有 no-warning 则直接返回true
+    if (no_warning) {
+      return true;
+    }
+    const local = location.host;
+    const host = new URL(url).host;
+          // 如果当前页面的Host与设置中的XIAOMUSIC_HOSTNAME、PORT一致, 不再提醒
+    if (local === host) {
+
+      localStorage.setItem('no-warning', 'true');
+      // 设置全局变量
+      no_warning = true;
+      return true;
+    }
+      // 如果当前页面的Host与设置中的XIAOMUSIC_HOSTNAME、PORT不一致
+      const validHost = document.getElementById('valid-host');
+      let validFlag = false;
+      $('#local-host').text(local);
+      $('#setting-host').text(host);
+      validHost.showModal();
+      //监听validHost的close事件
+      function _handleClose() {
+        console.log('%c提醒HOST不一致弹窗,用户已选择: ', 'color: #007acc;', validHost.returnValue);
+        if (validHost.returnValue == "no-warning") {
+          localStorage.setItem('no-warning', 'true');
+          no_warning = true;
+          validFlag = true;
+        }
+        validHost.removeEventListener('close', _handleClose)
+      }
+      validHost.addEventListener('close', _handleClose)
+      return validFlag; 
+  }
 });

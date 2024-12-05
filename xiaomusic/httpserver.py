@@ -315,6 +315,23 @@ async def musicinfos(
     return ret
 
 
+class MusicInfoObj(BaseModel):
+    musicname: str
+    title: str = ""
+    artist: str = ""
+    album: str = ""
+    year: str = ""
+    genre: str = ""
+    lyrics: str = ""
+    picture: str = ""  # base64
+
+
+@app.post("/setmusictag")
+async def setmusictag(info: MusicInfoObj, Verifcation=Depends(verification)):
+    ret = xiaomusic.set_music_tag(info.musicname, info)
+    return {"ret": ret}
+
+
 @app.get("/curplaylist")
 async def curplaylist(did: str = "", Verifcation=Depends(verification)):
     if not xiaomusic.did_exist(did):
@@ -335,6 +352,44 @@ async def delmusic(data: MusicItem, Verifcation=Depends(verification)):
 
 class UrlInfo(BaseModel):
     url: str
+
+
+class DidPlayMusic(BaseModel):
+    did: str
+    musicname: str = ""
+    searchkey: str = ""
+
+
+@app.post("/playmusic")
+async def playmusic(data: DidPlayMusic, Verifcation=Depends(verification)):
+    did = data.did
+    musicname = data.musicname
+    searchkey = data.searchkey
+    if not xiaomusic.did_exist(did):
+        return {"ret": "Did not exist"}
+
+    log.info(f"playmusic {did} musicname:{musicname} searchkey:{searchkey}")
+    await xiaomusic.do_play(did, musicname, searchkey)
+    return {"ret": "OK"}
+
+
+class DidPlayMusicList(BaseModel):
+    did: str
+    listname: str = ""
+    musicname: str = ""
+
+
+@app.post("/playmusiclist")
+async def playmusiclist(data: DidPlayMusicList, Verifcation=Depends(verification)):
+    did = data.did
+    listname = data.listname
+    musicname = data.musicname
+    if not xiaomusic.did_exist(did):
+        return {"ret": "Did not exist"}
+
+    log.info(f"playmusiclist {did} listname:{listname} musicname:{musicname}")
+    await xiaomusic.do_play_music_list(did, listname, musicname)
+    return {"ret": "OK"}
 
 
 @app.post("/downloadjson")

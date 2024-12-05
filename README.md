@@ -89,7 +89,8 @@
 [![PyPI - Downloads](https://img.shields.io/pypi/dm/xiaomusic)](https://pypi.org/project/xiaomusic/)
 [![Python Version from PEP 621 TOML](https://img.shields.io/python/required-version-toml?tomlFilePath=https%3A%2F%2Fraw.githubusercontent.com%2Fhanxi%2Fxiaomusic%2Fmain%2Fpyproject.toml)](https://pypi.org/project/xiaomusic/)
 [![GitHub Release](https://img.shields.io/github/v/release/hanxi/xiaomusic)](https://github.com/hanxi/xiaomusic/releases)
-
+[![Visitors](https://api.visitorbadge.io/api/daily?path=hanxi%2Fxiaomusic&label=daily%20visitor&countColor=%232ccce4&style=flat)](https://visitorbadge.io/status?path=hanxi%2Fxiaomusic)
+[![Visitors](https://api.visitorbadge.io/api/visitors?path=hanxi%2Fxiaomusic&label=total%20visitor&countColor=%232ccce4&style=flat)](https://visitorbadge.io/status?path=hanxi%2Fxiaomusic)
 
 
 使用小爱音箱播放音乐，音乐使用 yt-dlp 下载。
@@ -155,6 +156,29 @@ docker 和 docker compose 二选一即可，启动成功后，在 web 页面可�
 
 ### 🔥 修改默认8090端口映射
 
+#### 方法1： 不修改监听端口 8090
+
+【监听端口】保持为默认的 8090 不变，把【外网访问端口】改为 5678 。
+
+```yaml
+services:
+  xiaomusic:
+    image: hanxi/xiaomusic
+    container_name: xiaomusic
+    restart: unless-stopped
+    ports:
+      - 5678:8090
+    volumes:
+      - /xiaomusic/music:/app/music
+      - /xiaomusic/conf:/app/conf
+    environment:
+      XIAOMUSIC_PUBLIC_PORT: 5678
+```
+
+XIAOMUSIC_PUBLIC_PORT 对应后台设置里的【外网访问端口】，修改后可以不用重启。
+
+#### 方法2： 修改监听端口 8090 为 5678
+
 如果需要修改 8090 端口为其他端口，比如 5678，需要这样配，3个数字都需要是 5678 。见 <https://github.com/hanxi/xiaomusic/issues/19>
 
 ```yaml
@@ -177,7 +201,7 @@ services:
 遇到问题可以去 web 设置页面底部点击【下载日志文件】按钮，然后搜索一下日志文件内容确保里面没有账号密码信息后(有就删除这些敏感信息)，然后在提 issues 反馈问题时把下载的日志文件带上。
 
 > [!IMPORTANT]
-> XIAOMUSIC_PORT 也可以在后台配置，对应的是监听端口。
+> XIAOMUSIC_PORT 也可以在后台配置，对应的是监听端口，修改后记得重启。
 
 
 ### 🤐 支持语音口令
@@ -284,7 +308,8 @@ docker build -t xiaomusic .
 | L05C | [小米小爱音箱Play 增强版](https://home.mi.com/baike/index.html#/detail?model=xiaomi.wifispeaker.l05c)   |
 | L09A | [小米音箱Art](https://home.mi.com/webapp/content/baike/product/index.html?model=xiaomi.wifispeaker.l09a) |
 | LX04 X10A X08A | 已经支持的触屏版 |
-| M01/XMYX01JY | 小米小爱音箱HD (获取对话记录的接口比较特殊) |
+| X08C X08E X8F | 需要设置【型号兼容模式】选项为 true |
+| M01/XMYX01JY | 小米小爱音箱HD 需要设置【特殊型号获取对话记录】选项为 true 才能语音播放|
 
 型号与产品名称对照可以在这里查询 <https://home.miot-spec.com/s/xiaomi.wifispeaker>
 
