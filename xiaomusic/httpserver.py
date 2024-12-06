@@ -279,15 +279,17 @@ async def musicinfo(
         try:
             song = await downloadfile(url, "json")
             url = song['data']
-            log.info(f"musicinfo  song:{song}")
+            log.info(f"musicinfo  QQ")
         except Exception:
             url = xiaomusic.get_music_tags(name)["apiurl"]
-    log.info(f"musicinfo  url:{url}")
+
     if "song/url" in url:
         try:
             song = await downloadfile(url, "json")
-            log.info(f"musicinfo  song:{song}")
+            log.info(f"musicinfo  WY")
             url = song["data"][0]["url"]
+            if "kuwo" in url:
+                url = url.replace("https", "http")
         except Exception:
             url = None
     info = {

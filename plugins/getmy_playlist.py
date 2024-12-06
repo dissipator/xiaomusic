@@ -17,7 +17,7 @@ import requests,re,json
 # +        url = jsons['data'][0]['url']
 
 
-async def getmy_playlist(type="netease",api_host="http://127.0.0.1:3000", playlist_ids=[],uid=None,br=128000):
+async def getmy_playlist(type="netease",api_host="http://127.0.0.1:3000", playlist_ids=[],uid=None,br=128):
     """
     Purpose:
     """
@@ -55,7 +55,7 @@ async def getmy_playlist(type="netease",api_host="http://127.0.0.1:3000", playli
                     album = music["al"]["name"]
 
                     name = music.get("name")
-                    url = f"{api_host}/song/url?id={music['id']}&br={br}&realIP=211.161.244.70&proxy=HTTP:%2F%2F127.0.0.1:8080"
+                    url = f"{api_host}/song/url?id={music['id']}&br={br}000&realIP=211.161.244.70&proxy=HTTP:%2F%2F127.0.0.1:8080"
                     if (not name) or (not url):
                         continue
                     xiaomusic.all_music[name] = url
@@ -98,7 +98,7 @@ async def getmy_playlist(type="netease",api_host="http://127.0.0.1:3000", playli
                     album = music['al']['name']
 
                     name = music.get("name")
-                    url = f"{api_host}/song/url?id={music['id']}&br={br}&realIP=211.161.244.70&proxy=HTTP:%2F%2F127.0.0.1:8080"
+                    url = f"{api_host}/song/url?id={music['id']}&br={br}000&realIP=211.161.244.70&proxy=HTTP:%2F%2F127.0.0.1:8080"
                     if (not name) or (not url):
                         continue
                     xiaomusic.all_music[name] = url
@@ -152,16 +152,19 @@ async def getmy_playlist(type="netease",api_host="http://127.0.0.1:3000", playli
                     album = music["albumname"]
                     songmid = music["songmid"]
                     # url = f"https://lxmusicapi.onrender.com/url/tx/{songmid}/128k"
-                    url = f"http://127.0.0.1:1011/url/tx/{songmid}/{br/1000}k?key=n3Oyzh5QNRtD0JI0AXHFaw=="
+                    url = f"http://127.0.0.1:1011/url/tx/{songmid}/{br}k?key=n3Oyzh5QNRtD0JI0AXHFaw=="
                     lxurl = url
                     apiurl = ""
                     try:
-                        search_url = f"{api_host}/cloudsearch?keywords={name}({artist})&limit=1&type=1"
+                        search_url = f"{api_host}/cloudsearch?keywords={name}({artist})&limit=10&type=1"
+                        log.info(f"getmy_playlist search_url: {search_url}")
                         response = requests.get(search_url,timeout=2)
                         response.raise_for_status()  # 如果请求出现4xx、5xx等错误状态码则抛出异常
                         for song in response.json()['result']['songs']:
-                            apiurl = f"{api_host}/song/url?id={song['id']}&br={br}&proxy=HTTP:%2F%2F127.0.0.1:8080"
+                            apiurl = f"{api_host}/song/url?id={song['id']}&br={br}000&proxy=HTTP:%2F%2F127.0.0.1:8080"
                             if song['name'] == name and song['ar'][0]['name'] == artist:
+                                url = apiurl
+                                lxurl = ""
                                 picUrl = song["al"]["picUrl"]
                                 log.info(f"getmy_playlist api_url:{url}")
                                 break
@@ -173,7 +176,7 @@ async def getmy_playlist(type="netease",api_host="http://127.0.0.1:3000", playli
                         # response.raise_for_status()  # 如果请求出现4xx、5xx等错误状态码则抛出异常
                         # lxurl = response.json()['url']
                         pass
-                    log.info(f"getmy_playlist url:{url}")
+                    log.info(f"getmy_playlist url: {url}")
                     if (not name) or (not url):
                         continue
                     xiaomusic.all_music[name] = url
