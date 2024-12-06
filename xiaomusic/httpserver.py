@@ -274,17 +274,28 @@ async def musicinfo(
     name: str, musictag: bool = False, Verifcation=Depends(verification)
 ):
     url = xiaomusic.get_music_url(name)
-    try:
-        if "song/url" in url:
-            songs = await downloadfile(url, "json")
-            url = songs["data"][0]["url"]
-    except Exception:
-        pass
+
+    if "url/tx" in url:
+        try:
+            song = await downloadfile(url, "json")
+            url = song['data']
+            log.info(f"musicinfo  song:{song}")
+        except Exception:
+            url = xiaomusic.get_music_tags(name)["apiurl"]
+    log.info(f"musicinfo  url:{url}")
+    if "song/url" in url:
+        try:
+            song = await downloadfile(url, "json")
+            log.info(f"musicinfo  song:{song}")
+            url = song["data"][0]["url"]
+        except Exception:
+            url = None
     info = {
         "ret": "OK",
         "name": name,
         "url": url,
     }
+    log.info(f"musicinfo  info:{info}")
     if musictag:
         info["tags"] = xiaomusic.get_music_tags(name)
     return info

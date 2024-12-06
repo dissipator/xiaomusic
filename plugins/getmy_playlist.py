@@ -4,6 +4,7 @@ import requests,re,json
 # type: 歌单来源类型
 # api_host： api服务器地址
 # playlist_id： 歌单ID，uid：网易云账号用户id
+# 落雪 source https://github.com/ZxwyWebSite/lx-source/releases/download/vv1.0.3.0622/lx-source-linux-amd64v2.zip
 # f"{api_host}/song/url?id={music['id']}&br=350000&realIP=211.161.244.70&proxy=HTTP:%2F%2F127.0.0.1:8080"
 # 此链接是使用了 UnblockNeteaseMusic 解锁灰色的 NeteaseMusicApi的播放链接 要使用此链接还需要在 httpserver.py 中做下修改：
 # @app.get("/musicinfo")
@@ -133,43 +134,46 @@ async def getmy_playlist(type="netease",api_host="http://127.0.0.1:3000", playli
             response.raise_for_status()  # 如果请求出现4xx、5xx等错误状态码则抛出异常
             # print(response.text)
             result = response.text
+            
             # Remove callback function wrapper and parse JSON
             json_data = re.sub(r'^callback\(|MusicJsonCallback\(|jsonCallback\(|\)$', '', result)
             res = json.loads(json_data)
             one_music_list = []
             # Extract songlist and format music items (implement formatMusicItem function)
+            log.debug(f"getmy_playlist result:{result}")
             if 'cdlist' in res and len(res['cdlist']) > 0:
                 # print(res['cdlist'][0]['songlist'])
                 list_name = res['cdlist'][0]['dissname'] + "-QQ"
                 for music in res['cdlist'][0]['songlist']:
                     name = music["songname"]
+                    log.info(f"getmy_playlist name:{name}")
                     picUrl = ""
                     artist = music["singer"][0]["name"]
                     album = music["albumname"]
                     songmid = music["songmid"]
-                    print(name,artist,songmid)
+                    # url = f"https://lxmusicapi.onrender.com/url/tx/{songmid}/128k"
+                    url = f"http://127.0.0.1:1011/url/tx/{songmid}/{br/1000}k?key=n3Oyzh5QNRtD0JI0AXHFaw=="
+                    lxurl = url
+                    apiurl = ""
                     try:
-                        search_url = f"{api_host}/cloudsearch?keywords={name}({artist})&limit=3&type=1"
+                        search_url = f"{api_host}/cloudsearch?keywords={name}({artist})&limit=1&type=1"
                         response = requests.get(search_url,timeout=2)
                         response.raise_for_status()  # 如果请求出现4xx、5xx等错误状态码则抛出异常
                         for song in response.json()['result']['songs']:
+                            apiurl = f"{api_host}/song/url?id={song['id']}&br={br}&proxy=HTTP:%2F%2F127.0.0.1:8080"
                             if song['name'] == name and song['ar'][0]['name'] == artist:
-
-                                url = f"{api_host}/song/url?id={song['id']}&br={br}&proxy=HTTP:%2F%2F127.0.0.1:8080"
                                 picUrl = song["al"]["picUrl"]
+                                log.info(f"getmy_playlist api_url:{url}")
                                 break
-                        # response = requests.get(url,timeout=5)
+                        # response = requests.get(url,timeout=2)
                         # response.raise_for_status()  # 如果请求出现4xx、5xx等错误状态码则抛出异常
                         # url = response.json()['data'][0]['url']
                     except:
-                        url = f"https://lxmusicapi.onrender.com/url/tx/{songmid}/128k"
-                        headers = {"X-Request-Key": "share-v2"}
-                        response = requests.get(url, headers=headers,timeout=30)
-                        response.raise_for_status()  # 如果请求出现4xx、5xx等错误状态码则抛出异常
-                        url = response.json()['url']
-                    else:
+                        # response = requests.get(url, headers=headers,timeout=30)
+                        # response.raise_for_status()  # 如果请求出现4xx、5xx等错误状态码则抛出异常
+                        # lxurl = response.json()['url']
                         pass
-                        continue
+                    log.info(f"getmy_playlist url:{url}")
                     if (not name) or (not url):
                         continue
                     xiaomusic.all_music[name] = url
@@ -181,7 +185,8 @@ async def getmy_playlist(type="netease",api_host="http://127.0.0.1:3000", playli
                         "genre": "",
                         "picture": picUrl,
                         "lyrics": "",
-                        "url": url,
+                        "apiurl": apiurl,
+                        "xlurl":lxurl,
                     }
                     one_music_list.append(name)
                     if index > 100:
