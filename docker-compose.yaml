@@ -1,0 +1,22 @@
+services:
+   xiaomusic:
+     image: registry.cn-chengdu.aliyuncs.com/dissipator/xiaomusic:dev
+     container_name: xiaomusic
+     restart: unless-stopped
+     ports:
+       - 8090:8090
+     volumes:
+       - ./music:/app/music
+       - ./conf:/app/conf
+       - ./plugins:/app/plugins
+       - ./xiaomusic:/app/xiaomusic
+   api:
+     image: registry.cn-chengdu.aliyuncs.com/dissipator/music
+     container_name: api
+     restart: unless-stopped
+     ports:
+       - 80:80
+       - 3000:3000
+      #  - 1011:1011
+     environment:
+       - SOURCE=pyncmd qq kuwo kugou

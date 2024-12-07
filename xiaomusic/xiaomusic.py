@@ -8,6 +8,7 @@ import os
 import random
 import re
 import time
+import requests
 import urllib.parse
 from collections import OrderedDict
 from dataclasses import asdict
@@ -51,7 +52,6 @@ from xiaomusic.utils import (
     list2str,
     parse_cookie_string,
     parse_str_to_dict,
-    save_picture_by_base64,
     traverse_music_directory,
     try_add_access_control_param,
 )
@@ -489,6 +489,10 @@ class XiaoMusic:
     def get_music_url(self, name):
         if self.is_web_music(name):
             url = self.all_music[name]
+            if("song/url" in url):
+                jsons = requests.get(url, timeout=15) # 增加超时以避免长时间挂起
+                jsons.raise_for_status() # 如果响应不是200，引发HTTPError异常(url,"json")
+                url = jsons.json()['data'][0]['url']
             self.log.info(f"get_music_url web music. name:{name}, url:{url}")
             return url
 
@@ -772,6 +776,7 @@ class XiaoMusic:
         self.log.info(f"收到消息:{query} 控制面板:{ctrl_panel} did:{did}")
         try:
             opvalue, oparg = self.match_cmd(did, query, ctrl_panel)
+            self.log.info(f"opvalue: {opvalue} oparg:{oparg}")
             if not opvalue:
                 await asyncio.sleep(1)
                 await self.check_replay(did)
@@ -869,7 +874,9 @@ class XiaoMusic:
             # 自定义口令
             if opvalue.startswith("exec#"):
                 code = opvalue.split("#", 1)[1]
-                return ("exec", code)
+                if "(" in code:
+                    return ("exec", code)
+                return ("exec", f"{code}('{oparg}')")
             return (opvalue, oparg)
         self.log.info(f"未匹配到指令 {query} {ctrl_panel}")
         return (None, None)

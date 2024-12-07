@@ -16,7 +16,8 @@ import requests,re,json
 # +        jsons = await downloadfile(url,"json")
 # +        url = jsons['data'][0]['url']
 
-
+lxapihost="http://127.0.0.1:1011"
+lxapipass="IA95UwPet+OgZZ/E7AJZ8g=="
 async def getmy_playlist(type="netease",api_host="http://127.0.0.1:3000", playlist_ids=[],uid=None,br=128):
     """
     Purpose:
@@ -152,7 +153,7 @@ async def getmy_playlist(type="netease",api_host="http://127.0.0.1:3000", playli
                     album = music["albumname"]
                     songmid = music["songmid"]
                     # url = f"https://lxmusicapi.onrender.com/url/tx/{songmid}/128k"
-                    url = f"http://127.0.0.1:1011/url/tx/{songmid}/{br}k?key=n3Oyzh5QNRtD0JI0AXHFaw=="
+                    url = f"{lxapihost}/url/tx/{songmid}/{br}k?key={lxapipass}"
                     lxurl = url
                     apiurl = ""
                     try:
